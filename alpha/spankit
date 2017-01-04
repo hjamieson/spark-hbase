@@ -1,0 +1,7 @@
+JA=/Users/hughj/Development/hadoop/hbase-1.2.0-cdh5.9.0/lib
+spark-submit \
+  --class hugh.spark.alpha.ReadFoobar \
+  --master yarn \
+    --deploy-mode cluster \
+    --jars $JA/hbase-client-1.2.0-cdh5.9.0.jar,$JA/hbase-protocol-1.2.0-cdh5.9.0.jar,$JA/hbase-common-1.2.0-cdh5.9.0.jar,$JA/hbase-server-1.2.0-cdh5.9.0.jar,$JA/htrace-core-3.2.0-incubating.jar,$JA/zookeeper-3.4.5-cdh5.9.0.jar,$JA/metrics-core-2.2.0.jar \
+build/libs/alpha-1.0.jar
