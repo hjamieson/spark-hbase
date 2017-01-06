@@ -4,8 +4,10 @@
  */
 
 apply plugin: 'java'
+apply plugin: 'maven'
+
 version = "1.0"
-group = "org.oclc.model"
+group = "org.oclc.data"
 sourceCompatibility = "1.8"
 
 // In this section you declare where to find the dependencies of your project
@@ -21,3 +23,4 @@ dependencies {
 
     testCompile 'junit:junit:4.12','org.hamcrest:hamcrest-library:1.3'
 }
+

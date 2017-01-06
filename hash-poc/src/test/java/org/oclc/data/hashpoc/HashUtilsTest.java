@@ -1,6 +1,5 @@
-package org.oclc.model.hashpoc;
+package org.oclc.data.hashpoc;
 
-import com.google.common.primitives.Ints;
 import com.google.common.primitives.Shorts;
 import org.junit.Test;
 
@@ -8,7 +7,6 @@ import javax.xml.bind.DatatypeConverter;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +29,7 @@ public class HashUtilsTest {
 
    @Test
    public void testGenHash() {
-      short hashValue = HashUtils.hashCode("http://entity.oclc.org/12345".getBytes());
+      short hashValue = HashUtils.hashCode16("http://entity.oclc.org/12345".getBytes());
       assertThat(hashValue, not(equalTo(0)));
       assertThat(hashValue, lessThan((short)512));
       System.out.println("bits = " + DatatypeConverter.printHexBinary(Shorts.toByteArray(hashValue)));
@@ -65,5 +63,19 @@ public class HashUtilsTest {
       for (int j = 0; j < store1.length; j++){
          assertThat("salt value should be equal for same IRI",store1[j], equalTo(store2[j]));
       }
+   }
+
+   @Test
+   public void testGetSaltedRowKey(){
+      String SAMPLE = "abdcefg";
+      byte[] rowkey = HashUtils.saltedRowKey(SAMPLE.getBytes());
+      assertThat("must not be 'a'",rowkey[0], not(0x97));
+      byte[] unsalt = HashUtils.unsalt(rowkey);
+      assertThat("salt byte should be removed", rowkey[0], not(unsalt[0]));
+      assertThat("expect 'a' restored", new String(unsalt), equalTo(SAMPLE));
+
+      List<String> originalKeys = getIris(5).collect(Collectors.toList());
+      List<String> keys360 = getIris(5).map(p -> HashUtils.saltedRowKey(p.getBytes())).map(z -> HashUtils.unsalt(z)).map(y -> new String(y)).collect(Collectors.toList());
+      assertThat(originalKeys, containsInAnyOrder(keys360.toArray()));
    }
 }
