@@ -1,0 +1,5 @@
+<foobar><isA><urlOfSomething> .
+<foobar> <isA><urlOfSomething> .
+<foobar> <isA> <urlOfSomething> .
+<http://bnb.data.bl.uk/id/agent/AcceleratorScienceandTechnologyCentreDaresburyLaboratory> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/dc/terms/Agent> .
+<http://bnb.data.bl.uk/id/concept/ddc/e21/372.83205> <http://www.w3.org/2004/02/skos/core#notation> "372.83205"^^<http://dewey.info/schema-terms/Notation> .

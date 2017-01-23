@@ -1,0 +1,6 @@
+Concept:
+   - load linked data into hbase
+   - use hash to define key
+   - use spark to read/write/transform
+   - named after author of spark+hbase article (http://www.vidyasource.com/blog/Programming/Scala/Java/Data/Hadoop/Analytics/2014/01/25/lighting-a-spark-with-hbase)
+   
