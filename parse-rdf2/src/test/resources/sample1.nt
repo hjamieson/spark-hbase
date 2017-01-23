@@ -1,0 +1,14 @@
+<http://bnb.data.bl.uk/id/agent/2Kings%26LuvPublishers> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/dc/terms/Agent> .
+<http://bnb.data.bl.uk/id/agent/2Kings%26LuvPublishers> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Agent> .
+<http://bnb.data.bl.uk/id/agent/2Kings%26LuvPublishers> <http://www.w3.org/2000/01/rdf-schema#label> "2Kings&LuvPublishers" .
+<http://bnb.data.bl.uk/id/agent/A%26CBlack> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/dc/terms/Agent> .
+<http://bnb.data.bl.uk/id/agent/A%26CBlack> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Agent> .
+<http://bnb.data.bl.uk/id/agent/A%26CBlack> <http://www.w3.org/2000/01/rdf-schema#label> "A. & C. Black" .
+<http://bnb.data.bl.uk/id/agent/AAPC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/dc/terms/Agent> .
+<http://bnb.data.bl.uk/id/agent/AAPC> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Agent> .
+<http://bnb.data.bl.uk/id/agent/AAPC> <http://www.w3.org/2000/01/rdf-schema#label> "AAPC" .
+<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://purl.org/dc/terms/Agent> .
+<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Agent> .
+<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/2000/01/rdf-schema#label> "Abacus" .
+_:alice <http://xmlns.com/foaf/0.1/knows> _:bob .
+_:bob <http://xmlns.com/foaf/0.1/knows> _:alice .
