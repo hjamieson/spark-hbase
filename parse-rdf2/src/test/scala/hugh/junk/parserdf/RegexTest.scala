@@ -12,7 +12,7 @@ class RegexTest extends FunSuite {
   val items = io.Source.fromFile("src/test/resources/sample1.nt").getLines().toList
   val spo = """^\s*(\S+)\s*(\S+)\s*(\S+)\s*\.$""".r
   val spl = """^\s*(\S+)\s*(\S+)\s*(".+"(?=\s))\s\.$""".r
-  val sptl = """^\s*(\S+)\s*(\S+)\s*(".+"(?=\^)\^\^<[^>]+>)\s*\.$""".r
+  val sptl = """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r
   val spll = """^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r
 
   test("I can see the test items from the test") {
@@ -32,7 +32,7 @@ class RegexTest extends FunSuite {
     val zzz = items.map(_ match {
       case spo(s, p, o) => (s, p, o)
       case spl(s, p, o) => (s, p, o)
-      case sptl(s, p, o) => (s, p, o)
+      case sptl(s, p, o, lt) => (s, p, o, lt)
       case spll(s, p, o) => (s, p, o)
     })
   }
@@ -41,7 +41,7 @@ class RegexTest extends FunSuite {
     val zzz = items.map(_ match {
       case spo(s, _, _) => s
       case spl(s, _, _) => s
-      case sptl(s, _, _) => s
+      case sptl(s, _, _, _) => s
       case spll(s, _, _) => s
     })
     zzz.foreach(l => assert(l.startsWith("<") || l.startsWith("_:")))
@@ -51,7 +51,7 @@ class RegexTest extends FunSuite {
     val preds = items.map(_ match {
       case spo(_, p, _) => p
       case spl(_, p, _) => p
-      case sptl(_, p, _) => p
+      case sptl(_, p, _, _) => p
       case spll(_, p, _) => p
     })
     val px = """^<([^>]+)>$""".r
@@ -60,8 +60,8 @@ class RegexTest extends FunSuite {
 
   test("we can isolate the object for further decoding") {
     val objs = items.map(_ match {
-      case spl(_, _, o) => (o, "spl")
-      case sptl(_, _, o) => (o, "sptl")
+      case spl(_, _, o) => (o, "spl") // order is important!
+      case sptl(_, _, o, lt) => (o, "sptl")
       case spll(_, _, o) => (o, "spll")
       case spo(_, _, o) => (o, "spo")
     })
@@ -70,7 +70,7 @@ class RegexTest extends FunSuite {
       case "spo" => assert(y._1.endsWith(">") || y._1.startsWith("_:"))
       case "spl" => assert(y._1.endsWith("\""))
       case "spll" => assert(y._1.matches(""".+@\S+"""))
-      case "sptl" => assert(y._1.startsWith("\"")&& y._1.endsWith(">"))
+      case "sptl" => assert(y._1.matches("""^\w.*"""))
     })
   }
 
