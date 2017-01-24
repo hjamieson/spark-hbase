@@ -7,6 +7,11 @@
 // Apply the scala plugin to add support for Scala
 apply plugin: 'scala'
 
+ScalaCompileOptions.metaClass.daemonServer = true
+ScalaCompileOptions.metaClass.fork = true
+ScalaCompileOptions.metaClass.useAnt = false
+ScalaCompileOptions.metaClass.useCompileDaemon = false
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     mavenCentral()
