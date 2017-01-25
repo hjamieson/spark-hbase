@@ -21,6 +21,8 @@ was used to match the incoming nt input.
   val sptl = ( """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r, 2)
   /* object is lang-tagged literal */
   val spll = ("""^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r, 3)
+  /* used to match standard IRI < ...> identifiers */
+  val iri = """^<(.+)>$""".r
 
 
   def apply(input: String): Option[Codon] = {
@@ -32,21 +34,25 @@ was used to match the incoming nt input.
         case spll._1(s, p, o) => (spll._2, s, p, o, None)
         case spo._1(s, p, o) => (spo._2, s, p, o, None)
       }
+      // assumed: subject and pred are always IRIs
+      val subject = isolateIri(codon._2)
+      val predicate = isolateIri(codon._3)
+
       val result = codon._1 match {
         case 0 => {
-          new Codon(codon._2, codon._3, new ObjNode(codon._1, codon._4, None, None))
+          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, None))
         }
         case 1 => {
           // breakdown simple literal
-          new Codon(codon._2, codon._3, new ObjNode(codon._1, codon._4, None, None))
+          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, None))
         }
         case 2 => {
           // store typed literal
-          new Codon(codon._2, codon._3, new ObjNode(codon._1, codon._4, None, codon._5))
+          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, codon._5))
         }
         case 3 => {
           // language tagged literal
-          new Codon(codon._2, codon._3, new ObjNode(codon._1, codon._4, codon._5, None))
+          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, codon._5, None))
         }
       }
       Some(result)
@@ -55,6 +61,13 @@ was used to match the incoming nt input.
         println(s"unparsable input == $input")
         None
       }
+    }
+  }
+
+  def isolateIri(text: String): String = {
+    text match {
+      case iri(s) => s
+      case _ => text
     }
   }
 }

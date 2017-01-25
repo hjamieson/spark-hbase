@@ -14,6 +14,7 @@ class RegexTest extends FunSuite {
   val spl = """^\s*(\S+)\s*(\S+)\s*(".+"(?=\s))\s\.$""".r
   val sptl = """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r
   val spll = """^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r
+  val iri = """^<(.+)>$""".r
 
   test("I can see the test items from the test") {
     assert(items.size != 0)
@@ -72,6 +73,21 @@ class RegexTest extends FunSuite {
       case "spll" => assert(y._1.matches(""".+@\S+"""))
       case "sptl" => assert(y._1.matches("""^\w.*"""))
     })
+  }
+
+  test("we can unpack the global and local iris") {
+    val o1 = "<http://bnb.data.bl.uk/id/concept/ddc/e20/823.914>"
+    val o2 = "_:abc123"
+    val out = o1 match {
+      case iri(a) => a
+      case _ => o1
+    }
+    assert(out == "http://bnb.data.bl.uk/id/concept/ddc/e20/823.914")
+    val out2 = o2 match {
+      case iri(a) => a
+      case _ => o2
+    }
+    assert(out2 == "_:abc123")
   }
 
 
