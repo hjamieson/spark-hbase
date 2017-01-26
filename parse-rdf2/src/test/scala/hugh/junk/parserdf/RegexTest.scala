@@ -9,9 +9,15 @@ import org.scalatest.junit.JUnitRunner
   */
 @RunWith(classOf[JUnitRunner])
 class RegexTest extends FunSuite {
+  /*
+  literal forms:
+     " ... " .  - plain literal (may have escapes)
+     " ... "@en - tagged literal (may have escapes)
+     "..."^^<schema> - typed literal with schema
+   */
   val items = io.Source.fromFile("src/test/resources/sample1.nt").getLines().toList
   val spo = """^\s*(\S+)\s*(\S+)\s*(\S+)\s*\.$""".r
-  val spl = """^\s*(\S+)\s*(\S+)\s*(".+"(?=\s))\s\.$""".r
+  val spl = """^\s*(\S+)\s*(\S+)\s*"(.+)"(?=\s)\s\.$""".r
   val sptl = """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r
   val spll = """^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r
   val iri = """^<(.+)>$""".r
@@ -26,6 +32,17 @@ class RegexTest extends FunSuite {
 
   test("every item ends with a '.'") {
     assert(items map (_.endsWith(".")) reduceLeft (_ && _))
+  }
+
+  test ("we can parse literals with escaped quotes"){
+
+    val sample = """"This is a multi-line\nliteral with many quotes (\"\"\"\"\")\nand two apostrophes ('')." ."""
+    val expected = """This is a multi-line\nliteral with many quotes (\"\"\"\"\")\nand two apostrophes ('')."""
+    val litrx = """^\s*"(.+)"\s*\.$""".r
+    val literal = sample match {
+      case litrx(l) => l
+    }
+    assert(literal == expected)
   }
 
   test("all stmts composed of 3 globs + .") {
@@ -73,6 +90,14 @@ class RegexTest extends FunSuite {
       case "spll" => assert(y._1.matches(""".+@\S+"""))
       case "sptl" => assert(y._1.matches("""^\w.*"""))
     })
+  }
+
+  test ("object-literals are unquoted"){
+    val sample = """<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/2000/01/rdf-schema#label> "Abacus" ."""
+    val literal = sample match {
+      case spl(_,_,l) => l
+    }
+    assert(literal == "Abacus")
   }
 
   test("we can unpack the global and local iris") {
