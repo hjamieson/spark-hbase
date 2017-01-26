@@ -16,11 +16,9 @@ class RegexTest extends FunSuite {
      "..."^^<schema> - typed literal with schema
    */
   val items = io.Source.fromFile("src/test/resources/sample1.nt").getLines().toList
-  val spo = """^\s*(\S+)\s*(\S+)\s*(\S+)\s*\.$""".r
-  val spl = """^\s*(\S+)\s*(\S+)\s*"(.+)"(?=\s)\s\.$""".r
-  val sptl = """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r
-  val spll = """^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r
-  val iri = """^<(.+)>$""".r
+  val firstPassRx = """^\s*(\S+)\s*(\S+)\s*(.+)\s*\.$""".r  // breaks the input into 3 groups
+  val iri = """^<([^>]+)>\s*$""".r
+  val local = """^(_:.+)\s*$""".r
 
   test("I can see the test items from the test") {
     assert(items.size != 0)
@@ -48,57 +46,66 @@ class RegexTest extends FunSuite {
   test("all stmts composed of 3 globs + .") {
 
     val zzz = items.map(_ match {
-      case spo(s, p, o) => (s, p, o)
-      case spl(s, p, o) => (s, p, o)
-      case sptl(s, p, o, lt) => (s, p, o, lt)
-      case spll(s, p, o) => (s, p, o)
+      case firstPassRx(s, p, o) => (s, p, o)
     })
   }
 
   test("subject is either <sub> or _: form") {
     val zzz = items.map(_ match {
-      case spo(s, _, _) => s
-      case spl(s, _, _) => s
-      case sptl(s, _, _, _) => s
-      case spll(s, _, _) => s
+      case firstPassRx(s, _, _) => s
     })
     zzz.foreach(l => assert(l.startsWith("<") || l.startsWith("_:")))
+    zzz.foreach(_ match {
+      case iri(s) => s
+      case local(s) => s
+    })
   }
 
   test("we can isolate predicate between < and >") {
     val preds = items.map(_ match {
-      case spo(_, p, _) => p
-      case spl(_, p, _) => p
-      case sptl(_, p, _, _) => p
-      case spll(_, p, _) => p
+      case firstPassRx(_, p, _) => p
     })
-    val px = """^<([^>]+)>$""".r
-    val preds2 = preds.map(_ match { case px(p) => p })
+    preds.foreach(_ match {
+      case iri(p) => p
+    })
   }
 
   test("we can isolate the object for further decoding") {
     val objs = items.map(_ match {
-      case spl(_, _, o) => (o, "spl") // order is important!
-      case sptl(_, _, o, lt) => (o, "sptl")
-      case spll(_, _, o) => (o, "spll")
-      case spo(_, _, o) => (o, "spo")
+      case firstPassRx(_, _, o) => o
     })
-    objs.foreach(l => assert(!l._1.endsWith("."), "must not include period at end"))
-    objs.foreach(y => y._2 match {
-      case "spo" => assert(y._1.endsWith(">") || y._1.startsWith("_:"))
-      case "spl" => assert(y._1.endsWith("\""))
-      case "spll" => assert(y._1.matches(""".+@\S+"""))
-      case "sptl" => assert(y._1.matches("""^\w.*"""))
+
+    val literalPlain = """"(.+)"\s*""".r
+    val literalTagged = """(.+)@(.+)\s*""".r
+    val literalTyped = """"([^"]+)"\^\^(.+)\s*""".r
+
+    val nodes = objs.map(_ match {
+      case iri(id) => (4, id, None, None)
+      case local(loc) => (5, loc, None, None)
+      case literalTyped(l, sch) => (3, l, None, Some(sch))
+      case literalTagged(l, lang) => (2, l, Some(lang), None)
+      case literalPlain(l) => (1, l, None, None)
+      case s => (6, s, None, None)
+    })
+
+    nodes.foreach(n => {
+      n match {
+        case (1, txt, None, None) => println(1, txt)
+        case (2, txt, Some(lng), None) => println(2,txt)
+        case (3, txt, None, Some(sch)) => println(3, sch)
+        case (4, id, _,_) => println(4, id)
+        case (5, loc, _,_) => println(5, loc)
+      }
     })
   }
 
-  test ("object-literals are unquoted"){
-    val sample = """<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/2000/01/rdf-schema#label> "Abacus" ."""
-    val literal = sample match {
-      case spl(_,_,l) => l
-    }
-    assert(literal == "Abacus")
-  }
+//  test ("object-literals are unquoted"){
+//    val sample = """<http://bnb.data.bl.uk/id/agent/Abacus> <http://www.w3.org/2000/01/rdf-schema#label> "Abacus" ."""
+//    val literal = sample match {
+//      case spl(_,_,l) => l
+//    }
+//    assert(literal == "Abacus")
+//  }
 
   test("we can unpack the global and local iris") {
     val o1 = "<http://bnb.data.bl.uk/id/concept/ddc/e20/823.914>"

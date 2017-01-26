@@ -17,7 +17,7 @@ class CodonTest extends FunSuite {
   test("I can unmarshal a basic nt stmt") {
     val c = Codon(i1)
     assert(c.isDefined, "make sure we got one back")
-    assert(c.get.obj.nt == 0, "we used spo to parse")
+    assert(c.get.obj.nt == 1, "we used spo to parse")
     println(s"${c.get.sub} was type ${c.get.obj.nt}")
   }
 
@@ -37,9 +37,13 @@ class CodonTest extends FunSuite {
     val cod = c.get
     assert(cod.sub == "http://example.org/show/218")
     assert(cod.prd == "http://www.w3.org/2000/01/rdf-schema#label")
-    assert(cod.obj.nt == 1)
+    assert(cod.obj.nt == 5)
     assert(cod.obj.value == "That Seventies Show")
     println(c.toString)
+  }
+
+  test("I can print all codons"){
+    items.map(Codon(_)).foreach(c => println(c.get))
   }
 
 }

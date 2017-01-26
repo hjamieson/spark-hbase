@@ -3,59 +3,62 @@ package hugh.junk.parserdf
 /**
   * Created by jamiesoh on 1/24/17.
   */
-class Codon(val sub: String, val prd: String, val obj: ObjNode)
+class Codon(val sub: String, val prd: String, val obj: ObjNode) {
+  override def toString: String = s"(${sub}, ${prd}, ${obj})"
+}
 
-class ObjNode(val nt: Int, val value: String, val lang: Option[String], val schema: Option[String])
+class ObjNode(val nt: Int, val value: String, val lang: Option[String], val schema: Option[String]) {
+  override def toString(): String = {
+    nt match {
+      case 1 => s"(${nt},${value})"
+      case 2 => s"(${nt}, ${value})"
+      case 3 => s"(${nt}, ${value}, ${schema.get})"
+      case 4 => s"(${nt}, ${value}, ${lang.get})"
+      case 5 => s"(${nt}, ${value})"
+    }
+  }
+}
 
 object Codon {
   /*
-these regexs are paired with a value that can be used to know which variant
-was used to match the incoming nt input.
- */
-
-  /* classic s-p-o with all IRIs. */
-  val spo = ("""^\s*(\S+)\s*(\S+)\s*(\S+)\s*\.$""".r, 0)
-  /* simple literal object */
-  val spl = ("""^\s*(\S+)\s*(\S+)\s*(".+"(?=\s))\s\.$""".r, 1)
-  /* object is a typed literal */
-  val sptl = ( """^\s*(\S+)\s*(\S+)\s*"(.+"(?=\^))\^\^<([^>]+)>\s*\.$""".r, 2)
-  /* object is lang-tagged literal */
-  val spll = ("""^\s*(\S+)\s*(\S+)\s*("[^"]+"@\S+)\s*\.$""".r, 3)
-  /* used to match standard IRI < ...> identifiers */
-  val iri = """^<(.+)>$""".r
+  literal forms:
+     " ... " .  - plain literal (may have escapes)
+     " ... "@en - tagged literal (may have escapes)
+     "..."^^<schema> - typed literal with schema
+   */
+  val items = io.Source.fromFile("src/test/resources/sample1.nt").getLines().toList
+  val firstPassRx = """^\s*(\S+)\s*(\S+)\s*(.+)\s*\.$""".r
+  // breaks the input into 3 groups
+  val iri =
+  """^<([^>]+)>\s*$""".r
+  val local = """^(_:.+)\s*$""".r
+  val literalPlain = """"(.+)"\s*""".r
+  val literalTagged = """(.+)@(.+)\s*""".r
+  val literalTyped = """"([^"]+)"\^\^(.+)\s*""".r
 
 
   def apply(input: String): Option[Codon] = {
     // split the nt into (s,p,o) sections.  The variant used is the 1st item in the tuple.
     try {
       val codon = input match {
-        case spl._1(s, p, o) => (spl._2, s, p, o, None)
-        case sptl._1(s, p, o, t) => (sptl._2, s, p, o, Some(t))
-        case spll._1(s, p, o) => (spll._2, s, p, o, None)
-        case spo._1(s, p, o) => (spo._2, s, p, o, None)
+        case firstPassRx(s, p, o) => (s, p, o)
       }
-      // assumed: subject and pred are always IRIs
-      val subject = isolateIri(codon._2)
-      val predicate = isolateIri(codon._3)
 
-      val result = codon._1 match {
-        case 0 => {
-          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, None))
-        }
-        case 1 => {
-          // breakdown simple literal
-          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, None))
-        }
-        case 2 => {
-          // store typed literal
-          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, None, codon._5))
-        }
-        case 3 => {
-          // language tagged literal
-          new Codon(subject, predicate, new ObjNode(codon._1, codon._4, codon._5, None))
-        }
+      // assumed: subject and pred are always IRIs
+      val subject = isolateIri(codon._1)
+      val predicate = isolateIri(codon._2)
+
+
+      // process the object portion
+      val objn = codon._3 match {
+        case iri(id) => new ObjNode(1, id, None, None)
+        case local(loc) => new ObjNode(2, loc, None, None)
+        case literalTyped(l, sch) => new ObjNode(3, l, None, Some(sch))
+        case literalTagged(l, lang) => new ObjNode(4, l, Some(lang), None)
+        case literalPlain(l) => new ObjNode(5, l, None, None)
       }
-      Some(result)
+
+      Some(new Codon(subject, predicate, objn))
     } catch {
       case nomatch: MatchError => {
         println(s"unparsable input == $input")
@@ -67,7 +70,9 @@ was used to match the incoming nt input.
   def isolateIri(text: String): String = {
     text match {
       case iri(s) => s
-      case _ => text
+      case local(s) => s
     }
   }
+
+
 }
